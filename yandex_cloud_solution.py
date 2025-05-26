@@ -203,7 +203,12 @@ def create_advanced_features(df, is_train=True):
                                  bins=[0, 1000, 3000, 5000, 7000, np.inf],
                                  labels=['beginner', 'intermediate', 'advanced', 'expert', 'master'])
     
-    # Заполняем NaN в категориальных признаках
+    # Безопасное заполнение NaN в категориальных признаках
+    # Добавляем 'unknown' в категории перед заполнением
+    if df['p1_skill_level'].dtype.name == 'category':
+        df['p1_skill_level'] = df['p1_skill_level'].cat.add_categories(['unknown'])
+        df['p2_skill_level'] = df['p2_skill_level'].cat.add_categories(['unknown'])
+    
     df['p1_skill_level'] = df['p1_skill_level'].fillna('unknown').astype(str)
     df['p2_skill_level'] = df['p2_skill_level'].fillna('unknown').astype(str)
     df['gamemode'] = df['gamemode'].fillna('unknown').astype(str)
