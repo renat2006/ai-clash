@@ -203,6 +203,18 @@ def create_advanced_features(df, is_train=True):
                                  bins=[0, 1000, 3000, 5000, 7000, np.inf],
                                  labels=['beginner', 'intermediate', 'advanced', 'expert', 'master'])
     
+    # Заполняем NaN в категориальных признаках
+    df['p1_skill_level'] = df['p1_skill_level'].fillna('unknown').astype(str)
+    df['p2_skill_level'] = df['p2_skill_level'].fillna('unknown').astype(str)
+    df['gamemode'] = df['gamemode'].fillna('unknown').astype(str)
+    df['player_1_tag'] = df['player_1_tag'].fillna('unknown').astype(str)
+    df['player_2_tag'] = df['player_2_tag'].fillna('unknown').astype(str)
+    
+    # Заполняем NaN в карточных признаках
+    for i in range(1, 9):
+        df[f'player_1_card_{i}'] = df[f'player_1_card_{i}'].fillna(0).astype(int)
+        df[f'player_2_card_{i}'] = df[f'player_2_card_{i}'].fillna(0).astype(int)
+    
     # Взаимодействия
     df['trophy_card_interaction'] = df['trophy_diff'] * df['card_mean_diff']
     df['trophy_gamemode_num'] = df['trophy_diff'] * pd.Categorical(df['gamemode']).codes
@@ -387,6 +399,18 @@ def main():
     print("-" * 25)
     
     model = train_catboost_model(X_train, y_train, use_gpu)
+    
+    # Обработка NaN в категориальных признаках (исправление CatBoost ошибки)
+    cat_features = ['gamemode', 'player_1_tag', 'player_2_tag', 'p1_skill_level', 'p2_skill_level'] + \
+                   [f'player_1_card_{i}' for i in range(1, 9)] + \
+                   [f'player_2_card_{i}' for i in range(1, 9)]
+    
+    print("🔧 Обработка NaN в категориальных признаках...")
+    for col in cat_features:
+        if col in X_train.columns:
+            # Заполняем NaN строковым значением
+            X_train[col] = X_train[col].fillna('missing').astype(str)
+            X_test[col] = X_test[col].fillna('missing').astype(str)
     
     # Обучаем модель (как в требованиях соревнования)
     print("🚀 Обучение модели...")
